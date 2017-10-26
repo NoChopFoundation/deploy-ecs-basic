@@ -3,9 +3,9 @@ resources:
     type: image
     flags:
       - deploy-ecs-basic
-    integration: dr-ecr
+    integration: aws-docker
     pointer:
-      sourceName: "679404489841.dkr.ecr.us-east-1.amazonaws.com/deploy-ecs-basic"
+      sourceName: "git-codecommit.us-east-2.amazonaws.com/v1/repos/deploy-ecs-basic"
     seed:
       versionName: "latest"
 
