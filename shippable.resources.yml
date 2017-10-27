@@ -15,7 +15,7 @@ resources:
       - deploy-ecs-basic
     version:
       params:
-        PORT: 80
+        PORT: 8080
         ENVIRONMENT: "dev"
 
   - name: deploy-ecs-basic-docker-options
@@ -25,7 +25,7 @@ resources:
     version:
       memory: 100
       portMappings:
-        - 80:80
+        - 8080:8080
 
   - name: deploy-ecs-basic-replicas
     type: replicas

@@ -4,6 +4,6 @@ FROM readytalk/nodejs
 WORKDIR /app
 ADD . /app
 RUN npm install
-EXPOSE 80
+EXPOSE 8080
 
 ENTRYPOINT ["/nodejs/bin/npm", "start"]
