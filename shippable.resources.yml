@@ -5,7 +5,7 @@ resources:
       - deploy-ecs-basic
     integration: aws_docker
     pointer:
-      sourceName: "610381014852.dkr.ecr.us-east-2.amazonaws.com/ec2docker1"
+      sourceName: "610381014852.dkr.ecr.us-east-2.amazonaws.com/try2repo"
     seed:
       versionName: "latest"
 
