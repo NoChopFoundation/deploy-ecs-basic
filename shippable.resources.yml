@@ -3,7 +3,7 @@ resources:
     type: image
     flags:
       - deploy-ecs-basic
-    integration: aws-docker
+    integration: aws_docker
     pointer:
       sourceName: "git-codecommit.us-east-2.amazonaws.com/v1/repos/deploy-ecs-basic"
     seed:
