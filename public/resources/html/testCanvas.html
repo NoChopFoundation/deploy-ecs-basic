@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta charset = "utf-8">
+      <title>jQuery UI Widget - Default functionality</title>
+      <link rel = "stylesheet" href = "//code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+      <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
+      <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+      <script src = "../../lib/js/jcanvas.min.js"></script>
+
+      <script>
+         $(function() {
+            $.widget("iP.myButton", {
+               _create: function() { 
+                  this._button = $("<button>"); 
+                  this._button.text("My first Widget Button");
+                  this._button.width(this.options.width) 
+                  this._button.css("background-color", this.options.color);    
+                  this._button.css("position", "absolute");   
+                  this._button.css("left", "100px");            
+                  $(this.element).append(this._button);
+               },
+         
+               move: function(dx) { 
+                  var x = dx + parseInt(this._button.css("left")); 
+                  this._button.css("left", x); 
+                  if(x>400) { this._trigger("outbounds",{},  {position:x}); }
+               }
+            });
+            $("#button3").myButton();
+            $("#button3").myButton("move", 200);
+            //$("#button3").myButton("disable");
+         
+
+         
+            /**
+         $("canvas").drawPolygon({
+          	  draggable: true,
+          	  fillStyle: "#6c3",
+          	  x: 100, y: 100,
+          	  radius: 50, sides: 5,
+          	  layer: true
+          	});
+         
+			$('canvas').draw({
+					fn : function(ctx) {
+						ctx.fillStyle = '#333';
+						ctx.fillRect(50, 50, 100, 100);
+					},
+					 layer: true
+				});
+			
+        */        	
+
+         drawTableLayer('canvas.canvas1', 0, 0, document.getElementById('canvas1').scrollWidth, document.getElementById('canvas1').scrollHeight);
+         drawTableLayer('canvas.canvas2', 0, 0, document.getElementById('canvas2').scrollWidth, document.getElementById('canvas2').scrollHeight);
+         drawTableLayer('canvas.canvas3', 0, 0, document.getElementById('canvas3').scrollWidth, document.getElementById('canvas3').scrollHeight);
+         
+         });
+         
+function drawTableLayer(canvasId, tableTopLeft_x, tableTopLeft_y, tableWidth, tableHeight) {
+	drawTableLayer_Angle(canvasId, 0.5*Math.PI, 1.5*Math.PI, tableTopLeft_x, tableTopLeft_y, tableWidth, tableHeight);
+}
+
+function _createRadiusPoint(x, y, r) {
+	return { 'x': x, 'y': y, 'r': r };
+}
+         
+function drawTableLayer_Angle(canvasId, startAngle, stopAngle, tableTopLeft_x, tableTopLeft_y, tableWidth, tableHeight) {
+	//var canvas = document.getElementById(canvasId);
+	//var center = _createPoint(160, 150, 10);
+	
+	var cushionLen = 30;
+	
+	var leftCenter=null, rightCenter=null, topCenter=null, bottomCenter=null;
+	if (tableWidth > tableHeight) {
+		var middle = tableHeight / 2;
+		leftCenter  = _createRadiusPoint(tableTopLeft_x + middle, tableTopLeft_y + middle, middle);
+		rightCenter = _createRadiusPoint(tableTopLeft_x + tableWidth - middle, tableTopLeft_y + middle, middle);
+	} else if (tableWidth < tableHeight) {
+		var middle = tableWidth / 2;
+		topCenter    = _createRadiusPoint(tableTopLeft_x + middle, tableTopLeft_y + middle, middle);
+		bottomCenter = _createRadiusPoint(tableTopLeft_x + middle, tableTopLeft_y + tableHeight - middle, middle);
+	} else {
+		// circle
+		var middle = tableWidth / 2;
+		leftCenter  = _createRadiusPoint(tableTopLeft_x + middle, tableTopLeft_y + middle, middle);
+		rightCenter = _createRadiusPoint(tableTopLeft_x + tableWidth - middle, tableTopLeft_y + middle, middle);
+		topCenter    = _createRadiusPoint(tableTopLeft_x + middle, tableTopLeft_y + middle, middle);
+		bottomCenter = _createRadiusPoint(tableTopLeft_x + middle, tableTopLeft_y + tableHeight - middle, middle);
+	}
+	
+	var six  = 0.5 * Math.PI;
+	var nine = Math.PI;
+	var noon = 1.5 * Math.PI;
+	
+	//todo assert leftCenter.r - cushionLen not neg
+	
+	if (leftCenter != null) {
+		var grad = $(canvasId).createGradient({
+			x1: leftCenter.x, y1: leftCenter.y,
+			x2: leftCenter.x, y2: leftCenter.y,
+			r1: leftCenter.r, r2: leftCenter.r - cushionLen,
+			c1: 'rgba(255, 0, 0, 0.75)',
+			c2: '#000', s2: 0.2,
+			c3: '#000', s3: 0.8,
+			c4: 'rgba(255, 0, 0, 0.75)'
+	    });
+		
+		$(canvasId).drawArc({
+			fillStyle: grad,
+			layer: true,
+			x: leftCenter.x, y: leftCenter.y,
+			radius: 5
+		});
+		
+		// leftCenter responsible to draw .5PI to 1.5PI
+		var isOurSectorResponsibleToDraw = true;
+		if (startAngle > noon) {
+			isOurSectorResponsibleToDraw = false;
+		}
+		if (stopAngle < six) {
+			isOurSectorResponsibleToDraw = false;
+		}
+		
+		if (isOurSectorResponsibleToDraw) {
+			var minStartAngle = Math.max(six, startAngle);
+			var maxStopAngle  = Math.min(noon, stopAngle);
+			$(canvasId).draw({
+				layer: true,
+				fn: function(ctx) {
+					//ctx.strokeStyle = '#000';
+					//ctx.strokeWidth = 2;
+					ctx.fillStyle = grad;
+					
+					ctx.beginPath();
+					ctx.arc(leftCenter.x, leftCenter.y, leftCenter.r, minStartAngle, maxStopAngle);
+					
+					
+					var innerRadius = leftCenter.r - cushionLen;
+					ctx.lineTo(leftCenter.x - Math.cos(maxStopAngle - nine) * innerRadius, leftCenter.y - Math.sin(maxStopAngle - nine) * innerRadius);  
+					
+					ctx.arc(leftCenter.x, leftCenter.y, innerRadius, maxStopAngle, minStartAngle, true);
+					
+					ctx.lineTo(leftCenter.x - Math.cos(minStartAngle - nine) * leftCenter.r, leftCenter.y - Math.sin(minStartAngle - nine) * leftCenter.r);
+					
+					//ctx.closePath();
+					ctx.fill();
+	
+					//ctx.fillStyle = '#333';
+					//ctx.fillRect(50, 50, 100, 100);
+				}
+			});
+		}
+	}
+
+	
+		
+	
+/***
+    $(canvasId)
+    .drawPath({
+      fillStyle: function(layer) {
+    	    return $(this).createGradient({
+    	      // Gradient is drawn relative to layer position
+    	     
+            	  x1: layer.x, y1: layer.y,
+            	  x2: layer.x, y2: layer.y,
+            	  r1: 10, r2: 30,
+            	  c1: 'rgba(255, 0, 0, 0.75)',
+            	  c2: '#000'
+
+    	    });
+    	  },
+      strokeStyle: '#000',
+      strokeWidth: 4,
+      draggable: true,
+      closed: true,
+      layer: true,
+      x: 150, y: 150,
+      // Top petal
+      p1: {
+        type: 'arc',
+        x: 0, y: -50,
+        start: -90, end: 90,
+        radius: 50
+      },
+      // Right petal
+      p2: {
+        type: 'arc',
+        x: 50, y: 0,
+        start: 0, end: 180,
+        radius: 50
+      },
+      // Bottom petal
+      p3: {
+        type: 'arc',
+        x: 0, y: 50,
+        start: 90, end: 270,
+        radius: 50
+      },
+      // Left petal
+      p4: {
+        type: 'arc',
+        x: -50, y: 0,
+        start: 180, end: 360,
+        radius: 50
+      }
+    });
+    **/
+
+}
+			</script>
+   </head>
+   
+   <body>
+      <div id = "button3"></div>
+      <canvas id="canvas1" class="canvas1" width="800" height="400"></canvas>
+      <canvas id="canvas2" class="canvas2" width="400" height="800"></canvas>
+      <canvas id="canvas3" class="canvas3" width="800" height="800"></canvas>
+
+   </body>
+</html>
