@@ -10,6 +10,7 @@
 
       <script>
          $(function() {
+        	 /**
             $.widget("iP.myButton", {
                _create: function() { 
                   this._button = $("<button>"); 
@@ -33,7 +34,7 @@
          
 
          
-            /**
+            
          $("canvas").drawPolygon({
           	  draggable: true,
           	  fillStyle: "#6c3",
@@ -59,18 +60,20 @@
          });
          
 function drawTableLayer(canvasId, tableTopLeft_x, tableTopLeft_y, tableWidth, tableHeight) {
-	drawTableLayer_Angle(canvasId, 0.5*Math.PI, 1.5*Math.PI, tableTopLeft_x, tableTopLeft_y, tableWidth, tableHeight);
+	drawTableLayer_Angle(canvasId, 0, 2.5*Math.PI, tableTopLeft_x, tableTopLeft_y, tableWidth, tableHeight);
 }
 
 function _createRadiusPoint(x, y, r) {
 	return { 'x': x, 'y': y, 'r': r };
 }
+
+function ringTable_isDebuggingTable() {
+	return false;
+}
          
 function drawTableLayer_Angle(canvasId, startAngle, stopAngle, tableTopLeft_x, tableTopLeft_y, tableWidth, tableHeight) {
-	//var canvas = document.getElementById(canvasId);
-	//var center = _createPoint(160, 150, 10);
 	
-	var cushionLen = 30;
+	
 	
 	var leftCenter=null, rightCenter=null, topCenter=null, bottomCenter=null;
 	if (tableWidth > tableHeight) {
@@ -90,134 +93,251 @@ function drawTableLayer_Angle(canvasId, startAngle, stopAngle, tableTopLeft_x, t
 		bottomCenter = _createRadiusPoint(tableTopLeft_x + middle, tableTopLeft_y + tableHeight - middle, middle);
 	}
 	
-	var six  = 0.5 * Math.PI;
-	var nine = Math.PI;
-	var noon = 1.5 * Math.PI;
 	
 	//todo assert leftCenter.r - cushionLen not neg
 	
 	if (leftCenter != null) {
+		ringTable_drawCurvedEnd(canvasId, leftCenter, startAngle, stopAngle, 0.5*Math.PI, 1.5*Math.PI);
+	}
+	if (rightCenter != null) {
+		ringTable_drawCurvedEnd(canvasId, rightCenter, startAngle, stopAngle, 1.5*Math.PI, 2.5*Math.PI);
+	}
+	if (bottomCenter != null) {
+		ringTable_drawCurvedEnd(canvasId, bottomCenter, startAngle, stopAngle, 0, Math.PI);
+	}
+	if (topCenter != null) {
+		ringTable_drawCurvedEnd(canvasId, topCenter, startAngle, stopAngle, Math.PI, 2*Math.PI);
+	}
+	if (topCenter == null) { 
+		ringTable_drawStraightSides(canvasId, leftCenter.x, tableTopLeft_y, rightCenter.x - leftCenter.x, tableHeight, true);
+	}
+	if (leftCenter == null) {
+		ringTable_drawStraightSides(canvasId, tableTopLeft_x, topCenter.y, tableWidth, bottomCenter.y - topCenter.y, false);
+	}
+			
+
+}
+
+
+function ringTable_drawStraightSides(canvasId, topLeft_x, topLeft_y, widthL, heightL, isTopAndBottomRail) {
+	var cushionLen = 30;
+	
+	
+	if (isTopAndBottomRail) {
 		var grad = $(canvasId).createGradient({
-			x1: leftCenter.x, y1: leftCenter.y,
-			x2: leftCenter.x, y2: leftCenter.y,
-			r1: leftCenter.r, r2: leftCenter.r - cushionLen,
+			x1: topLeft_x, y1: topLeft_y,
+			x2: topLeft_x, y2: topLeft_y + cushionLen,
 			c1: 'rgba(255, 0, 0, 0.75)',
 			c2: '#000', s2: 0.2,
 			c3: '#000', s3: 0.8,
 			c4: 'rgba(255, 0, 0, 0.75)'
 	    });
 		
+		{
+			var topArgs = {
+				x: topLeft_x + widthL/2, y: topLeft_y + cushionLen/2,
+				width: widthL,
+				height: cushionLen,
+				//fromCenter: false,
+				layer: true,
+				fillStyle: function(layer) {
+					return $(this).createGradient({
+						x1: layer.x, y1: layer.y - layer.height/2,
+						x2: layer.x, y2: layer.y + layer.height/2,
+						c1: 'rgba(255, 0, 0, 0.75)',
+						c2: '#000', s2: 0.2,
+						c3: '#000', s3: 0.8,
+						c4: 'rgba(255, 0, 0, 0.75)'
+				    });
+				}
+			};
+			
+			if (ringTable_isDebuggingTable()) {
+				topArgs.strokeStyle = '#000';
+				topArgs.strokeWidth = 2;
+			} else {
+				//topArgs.fillStyle = grad;
+			}
+			
+			$(canvasId).drawRect(topArgs);
+		}
+		{
+			var topArgs = {
+				x: topLeft_x + widthL / 2, 
+				y: (heightL - cushionLen) + cushionLen/2,
+				width: widthL,
+				height: cushionLen,
+				//fromCenter: false,
+				layer: true,
+				fillStyle: function(layer) {
+					return $(this).createGradient({
+						x1: layer.x, y1: layer.y - layer.height/2,
+						x2: layer.x, y2: layer.y + layer.height/2,
+						c1: 'rgba(255, 0, 0, 0.75)',
+						c2: '#000', s2: 0.2,
+						c3: '#000', s3: 0.8,
+						c4: 'rgba(255, 0, 0, 0.75)'
+				    });
+				}
+			};
+			
+			if (ringTable_isDebuggingTable()) {
+				topArgs.strokeStyle = '#000';
+				topArgs.strokeWidth = 2;
+			} else {
+				//topArgs.fillStyle = grad;
+			}
+			
+			$(canvasId).drawRect(topArgs);
+		}
+	} else {
+		var grad = $(canvasId).createGradient({
+			x1: topLeft_x, y1: topLeft_y,
+			x2: topLeft_x, y2: topLeft_y + cushionLen,
+			c1: 'rgba(255, 0, 0, 0.75)',
+			c2: '#000', s2: 0.2,
+			c3: '#000', s3: 0.8,
+			c4: 'rgba(255, 0, 0, 0.75)'
+	    });
+		{
+			var topArgs = {
+				x: topLeft_x + cushionLen / 2, 
+				y: topLeft_y + heightL / 2,
+				width: cushionLen,
+				height: heightL,
+				//fromCenter: false,
+				layer: true,
+				fillStyle: function(layer) {
+					return $(this).createGradient({
+						x1: layer.x - layer.width/2 , y1: layer.y,
+						x2: layer.x + layer.width/2, y2: layer.y,
+						c1: 'rgba(255, 0, 0, 0.75)',
+						c2: '#000', s2: 0.2,
+						c3: '#000', s3: 0.8,
+						c4: 'rgba(255, 0, 0, 0.75)'
+				    });
+				}
+			};
+			
+			if (ringTable_isDebuggingTable()) {
+				topArgs.strokeStyle = '#000';
+				topArgs.strokeWidth = 2;
+			} else {
+				//topArgs.fillStyle = grad;
+			}
+			
+			$(canvasId).drawRect(topArgs);
+		}
+		{
+			var topArgs = {
+				x: topLeft_x + widthL - cushionLen + (cushionLen/2), y: topLeft_y + heightL/2,
+				width: cushionLen,
+				height: heightL,
+				//fromCenter: false,
+				layer: true,
+				fillStyle: function(layer) {
+					return $(this).createGradient({
+						x1: layer.x - layer.width/2,  y1: layer.y,
+						x2: layer.x + layer.width/2,  y2: layer.y,
+						c1: 'rgba(255, 0, 0, 0.75)',
+						c2: '#000', s2: 0.2,
+						c3: '#000', s3: 0.8,
+						c4: 'rgba(255, 0, 0, 0.75)'
+				    });
+				}
+			};
+			
+			if (ringTable_isDebuggingTable()) {
+				topArgs.strokeStyle = '#000';
+				topArgs.strokeWidth = 2;
+			} else {
+				//topArgs.fillStyle = grad;
+			}
+			
+			$(canvasId).drawRect(topArgs);
+		}
+	}
+}
+
+/**
+ * canvasId - In the form 'canvas' + 'canvas_class'.  For instance, 'canvas.ringTableOne'
+ * centerRadial - pivit center of the curve.  Expecting centerRadial.x, centerRadial.y, centerRadial.r 
+ * startAngle - In radians, starting angle of what we are drawing at high level.  If it falls outside of this sector's responsibility nothing is drawn.
+ * stopAngle  - In radians, starting angle of what we are drawing at high level.  If it falls outside of this sector's responsibility nothing is drawn.
+ * responsibilityStartAngle - In radians, the starting angle of this sector.  We are only responsible to draw in this sector.  This is done to provide different gradients across different parts of the table for lighting/perspectives.
+ * responsibilityStopAngle  - In radians, the stopping angle of this sector.  We are only responsible to draw in this sector.  This is done to provide different gradients across different parts of the table.
+ *
+ */
+function ringTable_drawCurvedEnd(canvasId, centerRadial, startAngle, stopAngle, responsibilityStartAngle, responsibilityStopAngle) {
+	var cushionLen = 30;
+	
+	var grad = $(canvasId).createGradient({
+		x1: centerRadial.x, y1: centerRadial.y,
+		x2: centerRadial.x, y2: centerRadial.y,
+		r1: centerRadial.r, r2: centerRadial.r - cushionLen,
+		c1: 'rgba(255, 0, 0, 0.75)',
+		c2: '#000', s2: 0.2,
+		c3: '#000', s3: 0.8,
+		c4: 'rgba(255, 0, 0, 0.75)'
+    });
+	
+	if (ringTable_isDebuggingTable()) {
+		// Draw the circle center for debugging
 		$(canvasId).drawArc({
 			fillStyle: grad,
 			layer: true,
-			x: leftCenter.x, y: leftCenter.y,
+			x: centerRadial.x, y: centerRadial.y,
 			radius: 5
 		});
-		
-		// leftCenter responsible to draw .5PI to 1.5PI
-		var isOurSectorResponsibleToDraw = true;
-		if (startAngle > noon) {
-			isOurSectorResponsibleToDraw = false;
-		}
-		if (stopAngle < six) {
-			isOurSectorResponsibleToDraw = false;
-		}
-		
-		if (isOurSectorResponsibleToDraw) {
-			var minStartAngle = Math.max(six, startAngle);
-			var maxStopAngle  = Math.min(noon, stopAngle);
-			$(canvasId).draw({
-				layer: true,
-				fn: function(ctx) {
-					//ctx.strokeStyle = '#000';
-					//ctx.strokeWidth = 2;
-					ctx.fillStyle = grad;
-					
-					ctx.beginPath();
-					ctx.arc(leftCenter.x, leftCenter.y, leftCenter.r, minStartAngle, maxStopAngle);
-					
-					
-					var innerRadius = leftCenter.r - cushionLen;
-					ctx.lineTo(leftCenter.x - Math.cos(maxStopAngle - nine) * innerRadius, leftCenter.y - Math.sin(maxStopAngle - nine) * innerRadius);  
-					
-					ctx.arc(leftCenter.x, leftCenter.y, innerRadius, maxStopAngle, minStartAngle, true);
-					
-					ctx.lineTo(leftCenter.x - Math.cos(minStartAngle - nine) * leftCenter.r, leftCenter.y - Math.sin(minStartAngle - nine) * leftCenter.r);
-					
-					//ctx.closePath();
-					ctx.fill();
-	
-					//ctx.fillStyle = '#333';
-					//ctx.fillRect(50, 50, 100, 100);
-				}
-			});
-		}
 	}
-
 	
-		
+	var isOurSectorResponsibleToDraw = true;
+	if (startAngle > responsibilityStopAngle) {
+		isOurSectorResponsibleToDraw = false;
+	}
+	if (stopAngle < responsibilityStartAngle) {
+		isOurSectorResponsibleToDraw = false;
+	}
 	
-/***
-    $(canvasId)
-    .drawPath({
-      fillStyle: function(layer) {
-    	    return $(this).createGradient({
-    	      // Gradient is drawn relative to layer position
-    	     
-            	  x1: layer.x, y1: layer.y,
-            	  x2: layer.x, y2: layer.y,
-            	  r1: 10, r2: 30,
-            	  c1: 'rgba(255, 0, 0, 0.75)',
-            	  c2: '#000'
+	if (isOurSectorResponsibleToDraw) {
+		var minStartAngle = Math.max(responsibilityStartAngle, startAngle);
+		var maxStopAngle  = Math.min(responsibilityStopAngle, stopAngle);
+		$(canvasId).draw({
+			layer: true,
+			fn: function(ctx) {
+				var innerRadius = centerRadial.r - cushionLen;
+				
+				if (ringTable_isDebuggingTable()) {
+					ctx.strokeStyle = '#000';
+					ctx.strokeWidth = 2;	
+				} else {
+					ctx.fillStyle = grad;	
+				}
+				
+				ctx.beginPath();
+				ctx.arc(centerRadial.x, centerRadial.y, centerRadial.r, minStartAngle, maxStopAngle);
+				ctx.lineTo(centerRadial.x - Math.cos(maxStopAngle - Math.PI) * innerRadius, centerRadial.y - Math.sin(maxStopAngle - Math.PI) * innerRadius);  
+				ctx.arc(centerRadial.x, centerRadial.y, innerRadius, maxStopAngle, minStartAngle, true);
+				ctx.lineTo(centerRadial.x - Math.cos(minStartAngle - Math.PI) * centerRadial.r, centerRadial.y - Math.sin(minStartAngle - Math.PI) * centerRadial.r);
+				
+				if (ringTable_isDebuggingTable()) {
+					ctx.stroke();	
+				} else {
+					ctx.fill();	
+				}
+			}
+		});
+	}	
+} 
 
-    	    });
-    	  },
-      strokeStyle: '#000',
-      strokeWidth: 4,
-      draggable: true,
-      closed: true,
-      layer: true,
-      x: 150, y: 150,
-      // Top petal
-      p1: {
-        type: 'arc',
-        x: 0, y: -50,
-        start: -90, end: 90,
-        radius: 50
-      },
-      // Right petal
-      p2: {
-        type: 'arc',
-        x: 50, y: 0,
-        start: 0, end: 180,
-        radius: 50
-      },
-      // Bottom petal
-      p3: {
-        type: 'arc',
-        x: 0, y: 50,
-        start: 90, end: 270,
-        radius: 50
-      },
-      // Left petal
-      p4: {
-        type: 'arc',
-        x: -50, y: 0,
-        start: 180, end: 360,
-        radius: 50
-      }
-    });
-    **/
 
-}
 			</script>
    </head>
    
    <body>
-      <div id = "button3"></div>
-      <canvas id="canvas1" class="canvas1" width="800" height="400"></canvas>
-      <canvas id="canvas2" class="canvas2" width="400" height="800"></canvas>
-      <canvas id="canvas3" class="canvas3" width="800" height="800"></canvas>
+      <div><canvas id="canvas1" class="canvas1" width="800" height="400"></canvas></div>
+      <div><canvas id="canvas2" class="canvas2" width="400" height="800"></canvas></div>
+      <div><canvas id="canvas3" class="canvas3" width="800" height="800"></canvas></div>
 
    </body>
 </html>
