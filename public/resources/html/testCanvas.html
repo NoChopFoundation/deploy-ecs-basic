@@ -10,6 +10,263 @@
 
       <script>
          $(function() {
+        	 
+var PokerTable1 = function(params) {
+}
+$.extend(PokerTable1.prototype, {
+	area: function() {
+		console.log('area');
+	},
+	diameter: function() {
+		console.log('diameter');
+	}	
+});
+
+var p = new PokerTable1();
+p.area();
+
+$.widget("custom.pokertable", {
+	options: {
+		x: 255,
+		y: 200
+	},
+	_init: function() {
+		console.log('init');
+		this.refresh();
+	},
+	_setOption: function( key, value ) {
+		this._super( key, value );
+	},
+	_setOptions: function( options ) {
+		this._super( options );
+		this.refresh();
+	},
+	refresh: function() {
+		console.log('refresh');
+		//var progress = this.options.value + "%";
+		//this.element.text( progress );
+		//if ( this.options.value == 100 ) {
+       //     this._trigger( "complete", null, { value: 100 } );
+        //}
+	},
+    
+	
+	_create: function() {
+		console.log('create');
+	},
+	_destroy: function() {
+		console.log('destory');
+	},
+	hi: function() {
+		console.log('hi');
+	},
+	draw: function(a,b,c,d,e) {
+		console.log('draw');
+	},
+	paintSelf: function() {
+		var element = this.element[0];
+		var ctx = element.getContext("2d");
+		this._drawTableLayer('canvas.' + element.id, 0, 0, element.scrollWidth, element.scrollHeight);
+		
+		
+		//$.each(this.element, function (index, canvas) {
+			//this;
+			//value;
+			//outside;
+			
+			
+			//console.log(value + '    :   ' + value.id);
+			//console.log(value.scrollWidth + " " + value.scrollHeight);
+			//console.log('paintSelf' + $(value).attr('id'));
+			
+			//drawTableLayer('canvas.' + this.element.id, 0, 0, this.element.scrollWidth, this.element.scrollHeight);
+		//});
+	},
+	_drawTableLayer: function(canvasId, tableTopLeft_x, tableTopLeft_y, tableWidth, tableHeight) {
+		this._drawTableLayer_Angle(canvasId, 0, 2.5*Math.PI, tableTopLeft_x, tableTopLeft_y, tableWidth, tableHeight);
+	},
+	_drawTableLayer_Angle: function(canvasId, startAngle, stopAngle, tableTopLeft_x, tableTopLeft_y, tableWidth, tableHeight) {	
+
+		var leftCenter=null, rightCenter=null, topCenter=null, bottomCenter=null;
+		if (tableWidth > tableHeight) {
+			var middle = tableHeight / 2;
+			leftCenter  = this._createRadiusPoint(tableTopLeft_x + middle, tableTopLeft_y + middle, middle);
+			rightCenter = this._createRadiusPoint(tableTopLeft_x + tableWidth - middle, tableTopLeft_y + middle, middle);
+		} else if (tableWidth < tableHeight) {
+			var middle = tableWidth / 2;
+			topCenter    = this._createRadiusPoint(tableTopLeft_x + middle, tableTopLeft_y + middle, middle);
+			bottomCenter = this._createRadiusPoint(tableTopLeft_x + middle, tableTopLeft_y + tableHeight - middle, middle);
+		} else {
+			// circle
+			var middle = tableWidth / 2;
+			leftCenter  = this._createRadiusPoint(tableTopLeft_x + middle, tableTopLeft_y + middle, middle);
+			rightCenter = this._createRadiusPoint(tableTopLeft_x + tableWidth - middle, tableTopLeft_y + middle, middle);
+			topCenter    = this._createRadiusPoint(tableTopLeft_x + middle, tableTopLeft_y + middle, middle);
+			bottomCenter = this._createRadiusPoint(tableTopLeft_x + middle, tableTopLeft_y + tableHeight - middle, middle);
+		}
+		
+		
+		if (leftCenter != null) {
+			this._ringTable_drawCurvedEnd(canvasId, leftCenter, startAngle, stopAngle, 0.5*Math.PI, 1.5*Math.PI);
+		}
+		if (rightCenter != null) {
+			this._ringTable_drawCurvedEnd(canvasId, rightCenter, startAngle, stopAngle, 1.5*Math.PI, 2.5*Math.PI);
+		}
+		if (bottomCenter != null) {
+			this._ringTable_drawCurvedEnd(canvasId, bottomCenter, startAngle, stopAngle, 0, Math.PI);
+		}
+		if (topCenter != null) {
+			this._ringTable_drawCurvedEnd(canvasId, topCenter, startAngle, stopAngle, Math.PI, 2*Math.PI);
+		}
+		if (topCenter == null) { 
+			this._ringTable_drawStraightSides(canvasId, leftCenter.x, tableTopLeft_y, rightCenter.x - leftCenter.x, tableHeight, true);
+		}
+		if (leftCenter == null) {
+			this._ringTable_drawStraightSides(canvasId, tableTopLeft_x, topCenter.y, tableWidth, bottomCenter.y - topCenter.y, false);
+		}
+	},
+	_createRadiusPoint: function(x, y, r) {
+		return { 'x': x, 'y': y, 'r': r };
+	},
+	/**
+	 * canvasId - In the form 'canvas' + 'canvas_class'.  For instance, 'canvas.ringTableOne'
+	 * centerRadial - pivit center of the curve.  Expecting centerRadial.x, centerRadial.y, centerRadial.r 
+	 * startAngle - In radians, starting angle of what we are drawing at high level.  If it falls outside of this sector's responsibility nothing is drawn.
+	 * stopAngle  - In radians, starting angle of what we are drawing at high level.  If it falls outside of this sector's responsibility nothing is drawn.
+	 * responsibilityStartAngle - In radians, the starting angle of this sector.  We are only responsible to draw in this sector.  This is done to provide different gradients across different parts of the table for lighting/perspectives.
+	 * responsibilityStopAngle  - In radians, the stopping angle of this sector.  We are only responsible to draw in this sector.  This is done to provide different gradients across different parts of the table.
+	 *
+	 */
+	 _ringTable_drawCurvedEnd: function (canvasId, centerRadial, startAngle, stopAngle, responsibilityStartAngle, responsibilityStopAngle) {
+		var cushionLen = 30;
+		
+		var grad = $(canvasId).createGradient({
+			x1: centerRadial.x, y1: centerRadial.y,
+			x2: centerRadial.x, y2: centerRadial.y,
+			r1: centerRadial.r, r2: centerRadial.r - cushionLen,
+			c1: 'rgba(255, 0, 0, 0.75)',
+			c2: '#000', s2: 0.2,
+			c3: '#000', s3: 0.8,
+			c4: 'rgba(255, 0, 0, 0.75)'
+	    });
+		
+		if (this._ringTable_isDebuggingTable()) {
+			// Draw the circle center for debugging
+			$(canvasId).drawArc({
+				fillStyle: grad,
+				layer: true,
+				x: centerRadial.x, y: centerRadial.y,
+				radius: 5
+			});
+		}
+		
+		var isOurSectorResponsibleToDraw = true;
+		if (startAngle > responsibilityStopAngle) {
+			isOurSectorResponsibleToDraw = false;
+		}
+		if (stopAngle < responsibilityStartAngle) {
+			isOurSectorResponsibleToDraw = false;
+		}
+		
+		if (isOurSectorResponsibleToDraw) {
+			var minStartAngle = Math.max(responsibilityStartAngle, startAngle);
+			var maxStopAngle  = Math.min(responsibilityStopAngle, stopAngle);
+			var self = this;
+			$(canvasId).draw({
+				layer: true,
+				fn: function(ctx) {
+					var innerRadius = centerRadial.r - cushionLen;
+					if (innerRadius < 0) {
+						console.error('cushion length is too large for canvas dimensions');
+						innerRadius = 1;
+					}
+					
+					if (self._ringTable_isDebuggingTable()) {
+						ctx.strokeStyle = '#000';
+						ctx.strokeWidth = 2;	
+					} else {
+						ctx.fillStyle = grad;	
+					}
+					
+					ctx.beginPath();
+					ctx.arc(centerRadial.x, centerRadial.y, centerRadial.r, minStartAngle, maxStopAngle);
+					ctx.lineTo(centerRadial.x - Math.cos(maxStopAngle - Math.PI) * innerRadius, centerRadial.y - Math.sin(maxStopAngle - Math.PI) * innerRadius);  
+					ctx.arc(centerRadial.x, centerRadial.y, innerRadius, maxStopAngle, minStartAngle, true);
+					ctx.lineTo(centerRadial.x - Math.cos(minStartAngle - Math.PI) * centerRadial.r, centerRadial.y - Math.sin(minStartAngle - Math.PI) * centerRadial.r);
+					
+					if (self._ringTable_isDebuggingTable()) {
+						ctx.stroke();
+					} else {
+						ctx.fill();
+					}
+				}
+			});
+		}	
+	},
+	/**
+	 * Draws the straight poritions of the rail/cushion which are simply rectangles.
+	 *
+	 *
+	 */
+	 _ringTable_drawStraightSides: function(canvasId, topLeft_x, topLeft_y, theWidth, theHeight, isTopAndBottomRail) {
+		var cushionLen = 30;
+
+		if (isTopAndBottomRail) {
+			// top cushion
+			$(canvasId).drawRect( _private_ringTable_createDrawStraightSides_Params({
+				x: topLeft_x + theWidth/2, 
+				y: topLeft_y + cushionLen/2,
+				width: theWidth,
+				height: cushionLen,
+				data: { isVertical: false, 'canvasSelector': canvasId }				
+			}));
+			// bottom cushion
+			$(canvasId).drawRect( _private_ringTable_createDrawStraightSides_Params({
+				x: topLeft_x + theWidth/2, 
+				y: (theHeight - cushionLen) + cushionLen/2,
+				width: theWidth,
+				height: cushionLen,
+				data: { isVertical: false, 'canvasSelector': canvasId }
+			}));
+		} else {
+			// left cushion
+			$(canvasId).drawRect( _private_ringTable_createDrawStraightSides_Params({
+				x: topLeft_x + cushionLen / 2, 
+				y: topLeft_y + theHeight / 2,
+				width: cushionLen,
+				height: theHeight,
+				data: { isVertical: true, 'canvasSelector': canvasId }
+			}));
+			// right cushion
+			$(canvasId).drawRect( _private_ringTable_createDrawStraightSides_Params({
+				x: topLeft_x + theWidth - cushionLen + (cushionLen/2), 
+				y: topLeft_y + theHeight/2,
+				width: cushionLen,
+				height: theHeight,
+				data: { isVertical: true, 'canvasSelector': canvasId }			
+			}));
+		}
+	},
+	_ringTable_isDebuggingTable: function() {
+		return false;
+	}
+	
+});
+
+var c = $("#canvas6").pokertable({  
+	
+});
+c.pokertable("hi");
+c.pokertable("paintSelf");
+c.draggable( {
+	//containment: '#canvas5 #canvas6',
+	//cursor: 'move',
+	//snap: '#canvas5'
+});
+//c.attr("x", 50);
+//c.pokertable("hi");
+
+        	 
         	 /**
             $.widget("iP.myButton", {
                _create: function() { 
@@ -49,16 +306,60 @@
 					 layer: true
 				});
 			
-        */        	
+        */ 
+        
+//canvas1.control
+/**
+		createTablePropertyControl( {
+			id: 'canvas1Control',
+			header: '<h2>Horizontal Table</h2>',
+			height: 400,
+			width: 800
+		});
 
-         drawTableLayer('canvas.canvas1', 0, 0, document.getElementById('canvas1').scrollWidth, document.getElementById('canvas1').scrollHeight);
+         
          drawTableLayer('canvas.canvas2', 0, 0, document.getElementById('canvas2').scrollWidth, document.getElementById('canvas2').scrollHeight);
          drawTableLayer('canvas.canvas3', 0, 0, document.getElementById('canvas3').scrollWidth, document.getElementById('canvas3').scrollHeight);
          drawTableLayer('canvas.canvas4', 0, 0, document.getElementById('canvas4').scrollWidth, document.getElementById('canvas4').scrollHeight);
          drawTableLayer('canvas.canvas5', 0, 0, document.getElementById('canvas5').scrollWidth, document.getElementById('canvas5').scrollHeight);
-         
+ */        
          });
          
+function updateCss(selector, textAreaId) {
+	var textVal = $('#' + textAreaId).val();
+	var json = eval("(" + textVal + ")");
+	$(selector).css(json);
+	
+	//var val = $(selector).css('--fake');
+	//console.log(val);
+}
+         
+         /**
+function createTablePropertyControl(parms) {
+	var htmlHeader = parms.header;
+	if (htmlHeader != undefined) {
+		$('#'+parms.id).append(htmlHeader);
+	}
+	var textAreaId = parms.id + "TextBox";
+	var canvasId = parms.id + "Canvas";
+	
+	$('#'+parms.id).append("<textarea id='" + textAreaId + "' rows='8'>{\n" + 
+		"  width: '" + parms.width + "px',\n" + 
+		"  height: '" + parms.height + "px'\n" + 
+		"}</textarea>");
+	$('#'+parms.id).append("<br><button onclick='updateCss(\"#" + canvasId + "\", \"" + textAreaId + "\")'>Update css</button>")
+	$('#'+parms.id).append("<div><canvas id='" + canvasId + "' class='" + canvasId + "' width='800' height='400'></canvas></div>");
+	
+	drawTableLayer('canvas.' + canvasId, 0, 0, document.getElementById(canvasId).scrollWidth, document.getElementById(canvasId).scrollHeight);
+	
+	//<canvas id="canvas1" class="canvas1" width="800" height="400"></canvas>
+	//console.log('yo' + $('#'+ctlId));
+	//var b = $('#'+ctlId);
+	//$('#'+ctlId).append("<p>hi</p>");
+	//console.log($('#'+ctlId).attr("myprop"));
+	
+}
+
 function drawTableLayer(canvasId, tableTopLeft_x, tableTopLeft_y, tableWidth, tableHeight) {
 	drawTableLayer_Angle(canvasId, 0, 2.5*Math.PI, tableTopLeft_x, tableTopLeft_y, tableWidth, tableHeight);
 }
@@ -147,10 +448,12 @@ function linearFillCallback(layer) {
 	}
 	return $(this).createGradient(params);
 };
+**/
 
 /**
  * Common parameters for sides.
  */
+ /**
 function _private_ringTable_createDrawStraightSides_Params(params) {
 	params.layer = true;
 	if (ringTable_isDebuggingTable()) {
@@ -161,13 +464,13 @@ function _private_ringTable_createDrawStraightSides_Params(params) {
 	}
 	
 	return params;
-}
+}*/
 
 /**
  * Draws the straight poritions of the rail/cushion which are simply rectangles.
  *
  *
- */
+ */ /**
 function ringTable_drawStraightSides(canvasId, topLeft_x, topLeft_y, theWidth, theHeight, isTopAndBottomRail) {
 	var cushionLen = 30;
 
@@ -206,7 +509,7 @@ function ringTable_drawStraightSides(canvasId, topLeft_x, topLeft_y, theWidth, t
 			data: { isVertical: true, 'canvasSelector': canvasId }			
 		}));
 	}
-}
+} */
 
 /**
  * canvasId - In the form 'canvas' + 'canvas_class'.  For instance, 'canvas.ringTableOne'
@@ -216,7 +519,8 @@ function ringTable_drawStraightSides(canvasId, topLeft_x, topLeft_y, theWidth, t
  * responsibilityStartAngle - In radians, the starting angle of this sector.  We are only responsible to draw in this sector.  This is done to provide different gradients across different parts of the table for lighting/perspectives.
  * responsibilityStopAngle  - In radians, the stopping angle of this sector.  We are only responsible to draw in this sector.  This is done to provide different gradients across different parts of the table.
  *
- */
+ */ 
+/**
 function ringTable_drawCurvedEnd(canvasId, centerRadial, startAngle, stopAngle, responsibilityStartAngle, responsibilityStopAngle) {
 	var cushionLen = 30;
 	
@@ -281,7 +585,7 @@ function ringTable_drawCurvedEnd(canvasId, centerRadial, startAngle, stopAngle, 
 			}
 		});
 	}	
-} 
+} */
 
 
 			</script>
@@ -293,11 +597,17 @@ canvas.canvas1 {
 }
    </style>
    
-   <body>
-      <div><canvas id="canvas1" class="canvas1" width="800" height="400"></canvas></div>
+<body>
+<!-- 
+	<div>
+		<div id="canvas1Control"></div>
+	</div>
+	
       <div><canvas id="canvas2" class="canvas2" width="400" height="800"></canvas></div>
       <div><canvas id="canvas3" class="canvas3" width="800" height="800"></canvas></div>
       <div><canvas id="canvas4" class="canvas4" width="1600" height="300"></canvas></div>
       <div><canvas id="canvas5" class="canvas5" width="300" height="1600"></canvas></div>
-   </body>
+       -->
+      <div><canvas  id="canvas6" class="canvas6" width="200" height="200"></canvas></div>
+</body>
 </html>
