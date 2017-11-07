@@ -210,49 +210,97 @@ $.widget("custom.pokertable", {
 	 */
 	 _ringTable_drawStraightSides: function(canvasId, topLeft_x, topLeft_y, theWidth, theHeight, isTopAndBottomRail) {
 		var cushionLen = 30;
+		var selfVal = this;
 
 		if (isTopAndBottomRail) {
 			// top cushion
-			$(canvasId).drawRect( _private_ringTable_createDrawStraightSides_Params({
+			$(canvasId).drawRect( this._private_ringTable_createDrawStraightSides_Params({
 				x: topLeft_x + theWidth/2, 
 				y: topLeft_y + cushionLen/2,
 				width: theWidth,
 				height: cushionLen,
-				data: { isVertical: false, 'canvasSelector': canvasId }				
+				data: { isVertical: false, 'canvasSelector': canvasId, self: selfVal }				
 			}));
 			// bottom cushion
-			$(canvasId).drawRect( _private_ringTable_createDrawStraightSides_Params({
+			$(canvasId).drawRect( this._private_ringTable_createDrawStraightSides_Params({
 				x: topLeft_x + theWidth/2, 
 				y: (theHeight - cushionLen) + cushionLen/2,
 				width: theWidth,
 				height: cushionLen,
-				data: { isVertical: false, 'canvasSelector': canvasId }
+				data: { isVertical: false, 'canvasSelector': canvasId, self: selfVal }
 			}));
 		} else {
 			// left cushion
-			$(canvasId).drawRect( _private_ringTable_createDrawStraightSides_Params({
+			$(canvasId).drawRect( this._private_ringTable_createDrawStraightSides_Params({
 				x: topLeft_x + cushionLen / 2, 
 				y: topLeft_y + theHeight / 2,
 				width: cushionLen,
 				height: theHeight,
-				data: { isVertical: true, 'canvasSelector': canvasId }
+				data: { isVertical: true, 'canvasSelector': canvasId, self: selfVal }
 			}));
 			// right cushion
-			$(canvasId).drawRect( _private_ringTable_createDrawStraightSides_Params({
+			$(canvasId).drawRect( this._private_ringTable_createDrawStraightSides_Params({
 				x: topLeft_x + theWidth - cushionLen + (cushionLen/2), 
 				y: topLeft_y + theHeight/2,
 				width: cushionLen,
 				height: theHeight,
-				data: { isVertical: true, 'canvasSelector': canvasId }			
+				data: { isVertical: true, 'canvasSelector': canvasId, self: selfVal }			
 			}));
 		}
 	},
 	_ringTable_isDebuggingTable: function() {
 		return false;
+	},
+	_private_ringTable_createDrawStraightSides_Params: function(params) {
+		params.layer = true;
+		if (this._ringTable_isDebuggingTable()) {
+			params.strokeStyle = '#000';
+			params.strokeWidth = 2;
+		} else {
+			params.fillStyle = this._linearFillCallback;
+		}
+		
+		return params;
+	},
+	_getValue: function(selector, property, defaulValue) {
+		var val = $(selector).css(property);
+		if (val == undefined) {
+			val = defaulValue;
+		}
+		return val;
+	},
+	// This creates the gradient for the straight part of the rail cushion
+	// We expect layer to have a layer.data.isVertical, layer.data.canvasSelector
+	// Exists outside this (like a static methof)
+	// Might exist outside this
+	_linearFillCallback: function (layer) {
+		
+		var cushionPrimary = layer.data.self._getValue(layer.data.canvasSelector, 'cushionPrimary', '#000');
+		var cushionFade = layer.data.self._getValue(layer.data.canvasSelector, 'cushionFade', 'rgba(255, 0, 0, 0.75)');
+		
+		var params = {
+				c1: cushionFade,
+				c2: cushionPrimary, s2: 0.2,
+				c3: cushionPrimary, s3: 0.8,
+				c4: cushionFade				
+		};
+		if (layer.data.isVertical) {
+			params.x1 = layer.x - layer.width/2;
+			params.x2 = layer.x + layer.width/2;
+			params.y1 = layer.y;
+			params.y2 = layer.y;
+		} else {
+			params.x1 = layer.x;
+			params.x2 = layer.x;
+			params.y1 = layer.y - layer.height/2;
+			params.y2 = layer.y + layer.height/2;
+		}
+		return $(this).createGradient(params);
 	}
 	
 });
 
+/**
 var c = $("#canvas6").pokertable({  
 	
 });
@@ -263,6 +311,7 @@ c.draggable( {
 	//cursor: 'move',
 	//snap: '#canvas5'
 });
+*/
 //c.attr("x", 50);
 //c.pokertable("hi");
 
@@ -310,20 +359,46 @@ c.draggable( {
         
 //canvas1.control
 /**
-		createTablePropertyControl( {
-			id: 'canvas1Control',
-			header: '<h2>Horizontal Table</h2>',
-			height: 400,
-			width: 800
-		});
+		
 
          
          drawTableLayer('canvas.canvas2', 0, 0, document.getElementById('canvas2').scrollWidth, document.getElementById('canvas2').scrollHeight);
          drawTableLayer('canvas.canvas3', 0, 0, document.getElementById('canvas3').scrollWidth, document.getElementById('canvas3').scrollHeight);
          drawTableLayer('canvas.canvas4', 0, 0, document.getElementById('canvas4').scrollWidth, document.getElementById('canvas4').scrollHeight);
          drawTableLayer('canvas.canvas5', 0, 0, document.getElementById('canvas5').scrollWidth, document.getElementById('canvas5').scrollHeight);
- */        
-         });
+ */
+ 
+	createTablePropertyControl({
+		id: 'canvasWithControl1',
+		height: 400,
+		width: 800
+	});
+	createTablePropertyControl({
+		id: 'canvasWithControl2',
+		height: 800,
+		width: 400
+	});
+	createTablePropertyControl({
+		id: 'canvasWithControl3',
+		height: 400,
+		width: 400
+	});
+	createTablePropertyControl({
+		id: 'canvasWithControl4',
+		height: 300,
+		width: 1300
+	});
+	createTablePropertyControl({
+		id: 'canvasWithControl5',
+		height: 1300,
+		width: 300
+	});
+	createTablePropertyControl({
+		id: 'canvasWithControl6',
+		height: 100,
+		width: 200
+	});
+});
          
 function updateCss(selector, textAreaId) {
 	var textVal = $('#' + textAreaId).val();
@@ -333,16 +408,64 @@ function updateCss(selector, textAreaId) {
 	//var val = $(selector).css('--fake');
 	//console.log(val);
 }
-         
-         /**
+
+var globalCanvasMap = {};
+ 
 function createTablePropertyControl(parms) {
-	var htmlHeader = parms.header;
-	if (htmlHeader != undefined) {
-		$('#'+parms.id).append(htmlHeader);
-	}
+	//var htmlHeader = parms.header;
+	//if (htmlHeader != undefined) {
+	//	$('#'+parms.id).append(htmlHeader);
+	//}
 	var textAreaId = parms.id + "TextBox";
 	var canvasId = parms.id + "Canvas";
+	var div = '#' + parms.id;
 	
+	//var $ctrl = $('<input/>').attr({type: 'textarea', name: 'textarea', value: 'text\ntyty'}).addClass("textarea");
+	//$(div).append($ctrl);
+	
+	$(div).append()
+	
+	var ctrl = $("<textarea id='" + textAreaId + "' rows='8' cols='50' />");
+	ctrl.text(JSON.stringify(parms, null, 3));
+	$(div).append(ctrl);
+	
+	$(div)
+		.append('<div/>')
+		.append(
+			$('<button/>').text('Update').click(function(event) {
+				var divId = this.parentElement.id;
+				var textAreaId = divId + "TextBox";
+				var canvasId = divId + "Canvas";
+				
+				var textVal = $('#'+textAreaId).val(); 
+				var json = eval("(" + textVal + ")");
+				
+				// Lets just create a new one
+				// Store away the poker object so we can access it globally
+				
+				$('#'+canvasId).replaceWith(
+						$('<canvas/>').attr({ id: canvasId, width: json.width, height: json.height, 'class': canvasId})
+				);
+				
+				globalCanvasMap[divId] = $('#'+canvasId).pokertable(json);
+				globalCanvasMap[divId].pokertable("paintSelf");
+				
+				
+		})
+	);
+	$(div)
+		.append('<div/>')
+		.append(
+			$('<canvas/>').attr({ id: canvasId, width: parms.width, height: parms.height, 'class': canvasId})
+	);
+	
+	// Store away the poker object so we can access it globally
+	globalCanvasMap[parms.id] = $('#'+canvasId).pokertable(parms);
+	globalCanvasMap[parms.id].pokertable("paintSelf");
+	
+	//$(div).
+	
+	/**
 	$('#'+parms.id).append("<textarea id='" + textAreaId + "' rows='8'>{\n" + 
 		"  width: '" + parms.width + "px',\n" + 
 		"  height: '" + parms.height + "px'\n" + 
@@ -351,7 +474,7 @@ function createTablePropertyControl(parms) {
 	$('#'+parms.id).append("<div><canvas id='" + canvasId + "' class='" + canvasId + "' width='800' height='400'></canvas></div>");
 	
 	drawTableLayer('canvas.' + canvasId, 0, 0, document.getElementById(canvasId).scrollWidth, document.getElementById(canvasId).scrollHeight);
-	
+	*/
 	//<canvas id="canvas1" class="canvas1" width="800" height="400"></canvas>
 	//console.log('yo' + $('#'+ctlId));
 	//var b = $('#'+ctlId);
@@ -359,6 +482,8 @@ function createTablePropertyControl(parms) {
 	//console.log($('#'+ctlId).attr("myprop"));
 	
 }
+
+/**
 
 function drawTableLayer(canvasId, tableTopLeft_x, tableTopLeft_y, tableWidth, tableHeight) {
 	drawTableLayer_Angle(canvasId, 0, 2.5*Math.PI, tableTopLeft_x, tableTopLeft_y, tableWidth, tableHeight);
@@ -598,16 +723,39 @@ canvas.canvas1 {
    </style>
    
 <body>
-<!-- 
-	<div>
-		<div id="canvas1Control"></div>
+	<h1>Poker Table Showcase</h1>
+	<p>Used to test tables of various dimensions and parameters.</p>
+
+	<div id="canvasWithControl1">
+		<h2>Basic table 1</h2>
+		<p>This shows table were width is longer than height.  The curved ends should appear on the left and right.</p>
 	</div>
-	
-      <div><canvas id="canvas2" class="canvas2" width="400" height="800"></canvas></div>
-      <div><canvas id="canvas3" class="canvas3" width="800" height="800"></canvas></div>
-      <div><canvas id="canvas4" class="canvas4" width="1600" height="300"></canvas></div>
-      <div><canvas id="canvas5" class="canvas5" width="300" height="1600"></canvas></div>
-       -->
-      <div><canvas  id="canvas6" class="canvas6" width="200" height="200"></canvas></div>
+	<hr>
+	<div id="canvasWithControl2">
+		<h2>Basic table 2</h2>
+		<p>This shows table were height is longer than height.  The curved ends should appear on the top and bottom.</p>
+	</div>
+	<hr>
+	<div id="canvasWithControl3">
+		<h2>Round table</h2>
+		<p>This shows table if it is a circle.</p>
+	</div>
+	<hr>
+		<div id="canvasWithControl4">
+		<h2>Stretched table 1</h2>
+		<p>This shows a table with an extremely long width.  Ensures drawing functions are scaling correctly.</p>
+	</div>
+	<hr>
+		<div id="canvasWithControl5">
+		<h2>Stretched table 1</h2>
+		<p>This shows a table with an extremely long height.  Ensures drawing functions are scaling correctly.</p>
+	</div>
+	<hr>
+		<div id="canvasWithControl6">
+		<h2>Small table</h2>
+		<p>Ensure we can draw very small tables without hitting errors.  Ensure rail size is proportional.</p>
+	</div>
+	<hr>	
+
 </body>
 </html>
