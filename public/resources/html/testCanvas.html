@@ -10,11 +10,27 @@
 
       <script>
          $(function() {
+        	 
+function funcname(a, b, c, d) {
+	console.log('funcname' + this + ' ' + a + b + c + d);
+}
+
+/**
+const full = ['funcname', 'aa','bb','cc','dd'];
+var args = full.slice(1);
+//window['funcname'].apply(this, args);
+eval(full[0]).apply(this, args);
+**/
 
 $.widget("custom.pokertable", {
 	options: {
 		x: 255,
-		y: 200
+		y: 200,
+		cushionPrimary: '#000', // #000
+		cushionSecondary: 'rgba(255, 0, 0, 0.75)',
+		drawRails: true,
+		drawFelt: true,
+		isDebuggingTable: false
 	},
 	_init: function() {
 		console.log('init');
@@ -57,6 +73,64 @@ $.widget("custom.pokertable", {
 	_drawTableLayer: function(canvasId, tableTopLeft_x, tableTopLeft_y, tableWidth, tableHeight) {
 		this._drawTableLayer_Angle(canvasId, 0, 2.5*Math.PI, tableTopLeft_x, tableTopLeft_y, tableWidth, tableHeight);
 	},
+	_drawTableLayer_felt: function(canvasId, centerX, centerY, r, leftCenter, rightCenter, topCenter, bottomCenter) {
+		var outsideRailPath = [];
+		
+		var grad = $(canvasId).createGradient({
+			x1: centerX, y1: centerY,
+			x2: centerX, y2: centerY,
+			r1: 1, r2: r,
+			c1: '#009933',
+			//c1: '#000000',
+			c2: '#33cc33'
+	    });
+		
+		if (leftCenter != null) {
+			if (topCenter != null) {
+				// circle
+				outsideRailPath.push(['arc', leftCenter.x, leftCenter.y, leftCenter.r, 0, 2*Math.PI]);
+			} else {
+				// width is longer than height
+				outsideRailPath.push(['arc', leftCenter.x, leftCenter.y, leftCenter.r, .5*Math.PI, 1.5*Math.PI]);
+				outsideRailPath.push(['lineTo', rightCenter.x, rightCenter.y - rightCenter.r]);
+				outsideRailPath.push(['arc', rightCenter.x, rightCenter.y, rightCenter.r, 1.5*Math.PI, 2.5*Math.PI]);
+				outsideRailPath.push(['lineTo', leftCenter.x, leftCenter.y + leftCenter.r]);				
+			}
+		} else {
+			// height is longer than width
+			outsideRailPath.push(['arc', topCenter.x, topCenter.y, topCenter.r, Math.PI, 2*Math.PI]);
+			outsideRailPath.push(['lineTo', bottomCenter.x + bottomCenter.r, bottomCenter.y]);
+			outsideRailPath.push(['arc', bottomCenter.x, bottomCenter.y, bottomCenter.r, 2*Math.PI, 3*Math.PI]);
+			outsideRailPath.push(['lineTo', topCenter.x - topCenter.r, topCenter.y]);				
+		}
+		
+		var self = this;
+		$(canvasId).draw({
+			layer: true,
+			fn: function(ctx) {
+				if (self._ringTable_isDebuggingTable()) {
+					ctx.strokeStyle = '#000';
+					ctx.strokeWidth = 2;	
+				} else {
+					ctx.fillStyle = grad;	
+				}	
+
+				ctx.beginPath();
+				var i;
+				for (i = 0; i < outsideRailPath.length; i++) {
+					var args = outsideRailPath[i].slice(1);
+					eval('ctx.' + outsideRailPath[i][0]).apply(ctx, args);
+				}
+				
+				if (self._ringTable_isDebuggingTable()) {
+					ctx.stroke();
+				} else {
+					ctx.fill();
+				}
+			}
+		});		
+	
+	},	
 	_drawTableLayer_Angle: function(canvasId, startAngle, stopAngle, tableTopLeft_x, tableTopLeft_y, tableWidth, tableHeight) {	
 
 		var leftCenter=null, rightCenter=null, topCenter=null, bottomCenter=null;
@@ -76,26 +150,36 @@ $.widget("custom.pokertable", {
 			topCenter    = this._createRadiusPoint(tableTopLeft_x + middle, tableTopLeft_y + middle, middle);
 			bottomCenter = this._createRadiusPoint(tableTopLeft_x + middle, tableTopLeft_y + tableHeight - middle, middle);
 		}
+
+		if (this.options.drawFelt) {
+			var centerX = tableTopLeft_x + (tableWidth / 2);
+			var centerY = tableTopLeft_y + (tableHeight / 2);
+			var r = Math.max(tableWidth, tableHeight);
+			this._drawTableLayer_felt(canvasId, centerX, centerY, r, leftCenter, rightCenter, topCenter, bottomCenter);
+		}
 		
 		
-		if (leftCenter != null) {
-			this._ringTable_drawCurvedEnd(canvasId, leftCenter, startAngle, stopAngle, 0.5*Math.PI, 1.5*Math.PI);
+		if (this.options.drawRails) {
+			if (leftCenter != null) {
+				this._ringTable_drawCurvedEnd(canvasId, leftCenter, startAngle, stopAngle, 0.5*Math.PI, 1.5*Math.PI);
+			}
+			if (rightCenter != null) {
+				this._ringTable_drawCurvedEnd(canvasId, rightCenter, startAngle, stopAngle, 1.5*Math.PI, 2.5*Math.PI);
+			}
+			if (bottomCenter != null) {
+				this._ringTable_drawCurvedEnd(canvasId, bottomCenter, startAngle, stopAngle, 0, Math.PI);
+			}
+			if (topCenter != null) {
+				this._ringTable_drawCurvedEnd(canvasId, topCenter, startAngle, stopAngle, Math.PI, 2*Math.PI);
+			}
+			if (topCenter == null) { 
+				this._ringTable_drawStraightSides(canvasId, leftCenter.x, tableTopLeft_y, rightCenter.x - leftCenter.x, tableHeight, true);
+			}
+			if (leftCenter == null) {
+				this._ringTable_drawStraightSides(canvasId, tableTopLeft_x, topCenter.y, tableWidth, bottomCenter.y - topCenter.y, false);
+			}
 		}
-		if (rightCenter != null) {
-			this._ringTable_drawCurvedEnd(canvasId, rightCenter, startAngle, stopAngle, 1.5*Math.PI, 2.5*Math.PI);
-		}
-		if (bottomCenter != null) {
-			this._ringTable_drawCurvedEnd(canvasId, bottomCenter, startAngle, stopAngle, 0, Math.PI);
-		}
-		if (topCenter != null) {
-			this._ringTable_drawCurvedEnd(canvasId, topCenter, startAngle, stopAngle, Math.PI, 2*Math.PI);
-		}
-		if (topCenter == null) { 
-			this._ringTable_drawStraightSides(canvasId, leftCenter.x, tableTopLeft_y, rightCenter.x - leftCenter.x, tableHeight, true);
-		}
-		if (leftCenter == null) {
-			this._ringTable_drawStraightSides(canvasId, tableTopLeft_x, topCenter.y, tableWidth, bottomCenter.y - topCenter.y, false);
-		}
+		
 	},
 	_createRadiusPoint: function(x, y, r) {
 		return { 'x': x, 'y': y, 'r': r };
@@ -116,10 +200,10 @@ $.widget("custom.pokertable", {
 			x1: centerRadial.x, y1: centerRadial.y,
 			x2: centerRadial.x, y2: centerRadial.y,
 			r1: centerRadial.r, r2: centerRadial.r - cushionLen,
-			c1: 'rgba(255, 0, 0, 0.75)',
-			c2: '#000', s2: 0.2,
-			c3: '#000', s3: 0.8,
-			c4: 'rgba(255, 0, 0, 0.75)'
+			c1: this.options.cushionSecondary,
+			c2: this.options.cushionPrimary, s2: 0.2,
+			c3: this.options.cushionPrimary, s3: 0.8,
+			c4: this.options.cushionSecondary
 	    });
 		
 		if (this._ringTable_isDebuggingTable()) {
@@ -221,7 +305,7 @@ $.widget("custom.pokertable", {
 		}
 	},
 	_ringTable_isDebuggingTable: function() {
-		return false;
+		return this.options.isDebuggingTable;
 	},
 	_private_ringTable_createDrawStraightSides_Params: function(params) {
 		params.layer = true;
@@ -246,9 +330,10 @@ $.widget("custom.pokertable", {
 	// Exists outside this (like a static methof)
 	// Might exist outside this
 	_linearFillCallback: function (layer) {
+		var self = layer.data.self;
 		
-		var cushionPrimary = layer.data.self._getValue(layer.data.canvasSelector, 'cushionPrimary', '#000');
-		var cushionFade = layer.data.self._getValue(layer.data.canvasSelector, 'cushionFade', 'rgba(255, 0, 0, 0.75)');
+		var cushionPrimary = self._getValue(layer.data.canvasSelector, 'cushionPrimary', self.options.cushionPrimary );
+		var cushionFade = self._getValue(layer.data.canvasSelector, 'cushionFade', self.options.cushionSecondary);
 		
 		var params = {
 				c1: cushionFade,
@@ -272,7 +357,14 @@ $.widget("custom.pokertable", {
 	
 });
 
- 
+function drawIt(patt) {
+	  $('canvas').drawEllipse({
+	    fillStyle: patt,
+	    x: 160, y: 100,
+	    width: 250, height: 100
+	  });
+	}
+	
 	createTablePropertyControl({
 		id: 'canvasWithControl1',
 		height: 400,
@@ -317,10 +409,6 @@ function updateCss(selector, textAreaId) {
 var globalCanvasMap = {};
  
 function createTablePropertyControl(parms) {
-	//var htmlHeader = parms.header;
-	//if (htmlHeader != undefined) {
-	//	$('#'+parms.id).append(htmlHeader);
-	//}
 	var textAreaId = parms.id + "TextBox";
 	var canvasId = parms.id + "Canvas";
 	var div = '#' + parms.id;
