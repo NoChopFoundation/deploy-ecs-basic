@@ -5,9 +5,11 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
+var account = require("./routes/account");
 var routes = require('./routes/index');
 var users = require('./routes/users');
 var name = require('./routes/name');
+
 var properties = require('./routes/properties');
 
 var app = express();
@@ -17,6 +19,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.get("/public/*",
   function (req, res) {
+	//console.log(__dirname + req.originalUrl);
     res.sendFile(__dirname + req.originalUrl);
   }
 );
@@ -33,6 +36,7 @@ app.use('/', routes);
 app.use('/users', users);
 app.use('/name', name);
 app.use('/properties', properties);
+app.use('/account', account);
 
 // catch 404 and forward to error handler
 app.use(

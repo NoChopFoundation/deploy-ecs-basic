@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Ethereum Account Explorer built on INFURA</title>
+    <!--  <script src="http://raw.githubusercontent.com/ethereum/web3.js/0.16.0/dist/web3.min.js"></scipt> -->
+	<script type="text/javascript" src="../js/web3.js"></script>
+	<script>
+		web3 = new Web3(new Web3.providers.HttpProvider("https://rinkeby.infura.io/sOvORNSPUEvDFPv1LWb0"));
+
+		function printAccountBalance() {
+				var GET = {};
+				var query = window.location.search.substring(1).split("&");
+				for (var i = 0, max = query.length; i < max; i++)
+				{
+					if (query[i] === "") // check for trailing & with no param
+						continue;
+					var param = query[i].split("=");
+					GET[decodeURIComponent(param[0])] = decodeURIComponent(param[1] || "");
+				}
+				var account = GET.account;
+				account = "0x1c94E9F589b3e165AEdE921cbc13c9928B2Df4Da";
+
+				var balanceWei = web3.eth.getBalance(account).toNumber();
+				var balance = web3.fromWei(balanceWei, 'ether');
+
+				document.write('[' + account + ']<br><br>')
+				document.write(balance + ' Ether');			
+		}
+	</script>
+  </head>
+
+  <body>
+  	<h2>Ethereum Account Explorer built on INFURA</h2>
+	<form method=GET action="rockPaperScissorDapp.html">
+		Enter an account: <input type=text size=50 name=account><input type=submit>
+	</form>
+		<br>
+		<p>Latest Block: 
+		<script>
+			document.write(web3.eth.blockNumber + "<br><br>");	
+		</script>
+		</p>
+		<p>Account Balance:
+		<script>
+			printAccountBalance();
+		</script>
+		</p>
+
+  </body>
+</html>

@@ -12,5 +12,12 @@ router.get(
     );
   }
 );
+router.get('/dapp', function (req, res, next) {
+	res.render('dapp/index', {
+		title: 'Express',
+		environment: process.env.ENVIRONMENT
+	});
+});
+		
 
 module.exports = router;

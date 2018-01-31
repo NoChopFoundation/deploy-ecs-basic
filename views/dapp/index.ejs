@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Sample NodeJS App</title>
+    <link rel="stylesheet" href="public/resources/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="public/resources/css/app.css" />
+  </head>
+  <body>
+  	<% include include_navbar %>
+
+	<main class="bs-docs-masthead" id="content" role="main" tabindex="-1">
+		<div class="container">
+		<!-- 1,451905626 2400 1653 --> 
+		<!-- <img height="436" width="300" src="public/resources/images/5763ee8ef080415589bc57d1c112408c.png" alt="rock-paper-scissors"> -->
+		<h1>Rock, Paper, Scissors Ethereum Game</h1>
+		<p>This example demostrates simple Ethereum contracts programmed in Solidity.</p>
+		<h2>Step 1 - send ether into a staging account</h2>
+		<p>To protect your main accounts, send a small about of ether into the 
+		   dynamically created account living in your web-browser.  This account is
+		   created using web3.eth and consists of a public address and private key.
+		   Make certain to download the account information incase your web-browser 
+		   crashes during game play or if your web-browser deletes its cached.
+		</p>
+        
+		<div class="staging-contract-form">
+			<div class="row">
+				<div class="col-lg-3">
+					<button id="generateLocalAccount" class="btn btn-default form-control">Generate Local Account</button>
+				</div>
+			</div>
+        </div>
+        
+  <!--      
+        <h3>Example Ethereum contract game to show basic Solidity programming and Truffle testing</h3>
+
+        <div id="nameGreeting">Loading greeting...</div>
+
+        <div class="name-form">
+          <div class="row">
+            <div class="col-lg-3 col-lg-offset-2">
+              <input id="firstNameInput" class="form-control" placeholder="First Name">
+            </div>
+            <div class="col-lg-3">
+              <input id="lastNameInput" class="form-control" placeholder="Last Name">
+            </div>
+            <div class="col-lg-2">
+              <button id="nameUpdate" class="btn btn-default form-control" disabled>Update</button>
+            </div>
+          </div>
+        </div>
+  -->
+
+      </div>
+    </main>
+
+		<% include include_scriptIncludes %>
+	</body>
+</html>
